@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 
 const protectedPaths = [
     // '/dashboard',
@@ -40,19 +40,18 @@ export async function middleware(request) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    const token = authHeader.substring(7);
-    console.log('JWT_SECRET:', process.env.JWT_SECRET);
-    console.log("token is :", token);
-
+    const token = authHeader.split(" ")[1];
     try {
-        console.log("MIDDLEWARE TRY")
-        const decoded = jwt.verify(token, "thisistopsecret");
-        console.log("decoded", decoded);
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+        const { payload } = await jose.jwtVerify(token, secret);
+        console.log("decoded", payload);
+
         const requiredRoles = Object.entries(roleProtectedPaths)
             .find(([path]) => pathname.startsWith(path))?.[1];
 
         if (requiredRoles) {
-            const userRole = decoded.role;
+            const userRole = payload.role;
 
             if (!userRole || !requiredRoles.includes(userRole)) {
                 if (pathname.startsWith('/api/')) {
@@ -67,18 +66,18 @@ export async function middleware(request) {
         }
 
         const requestHeaders = new Headers(request.headers);
-        requestHeaders.set('x-user-id', decoded.userId);
-        requestHeaders.set('x-user-role', decoded.role);
-        requestHeaders.set('x-user-email', decoded.email);
-        requestHeaders.set('x-user-username', decoded.username);
-        requestHeaders.set('x-user-role-id', decoded.roleId || '');
+        requestHeaders.set('x-user-id', payload.userId);
+        requestHeaders.set('x-user-role', payload.role);
+        requestHeaders.set('x-user-email', payload.email);
+        requestHeaders.set('x-user-username', payload.username);
+        requestHeaders.set('x-user-role-id', payload.roleId || '');
 
         const userObject = {
-            userId: decoded.userId,
-            email: decoded.email,
-            username: decoded.username,
-            role: decoded.role || 'User',
-            roleId: decoded.roleId || null
+            userId: payload.userId,
+            email: payload.email,
+            username: payload.username,
+            role: payload.role || 'User',
+            roleId: payload.roleId || null
         };
         requestHeaders.set('x-user', JSON.stringify(userObject));
 
@@ -89,10 +88,11 @@ export async function middleware(request) {
         });
 
     } catch (error) {
+        console.error("Token verification error:", error);
         if (pathname.startsWith('/api/')) {
             return NextResponse.json(
                 {
-                    error: error.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token'
+                    error: error.name === 'JWTExpired' ? 'Token expired' : 'Invalid token'
                 },
                 { status: 401 }
             );
@@ -109,6 +109,5 @@ export const config = {
         '/admin/:path*',
         // Protected API routes
         '/api/users/:path*',
-
     ],
 };

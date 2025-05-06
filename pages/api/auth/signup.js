@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 
 const prisma = new PrismaClient();
 
@@ -67,17 +67,20 @@ export default async function handler(req, res) {
             }
         });
 
-        const token = jwt.sign(
-            {
-                userId: newUser.user_id,
-                email: newUser.email,
-                username: newUser.username,
-                role: newUser.userrole?.role_name || 'user',
-                roleId: newUser.role_id || null
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
+        // Create a new JWT using jose
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+        const token = await new jose.SignJWT({
+            userId: newUser.user_id,
+            email: newUser.email,
+            username: newUser.username,
+            role: newUser.userrole?.role_name || 'user',
+            roleId: newUser.role_id || null
+        })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuedAt()
+            .setExpirationTime('24h')
+            .sign(secret);
 
         const { password_hash, ...userWithoutPassword } = newUser;
 
@@ -99,7 +102,7 @@ export default async function handler(req, res) {
 
         return res.status(500).json({
             error: 'Registration failed',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            // details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
         await prisma.$disconnect();

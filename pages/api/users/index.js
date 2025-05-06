@@ -73,7 +73,7 @@ export default async function handler(req, res) {
         console.error('API Error:', error);
         return res.status(500).json({
             error: 'Server error processing request',
-            message: process.env.NODE_ENV === 'development' ? error.message : undefined
+            // message: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
         await prisma.$disconnect();
