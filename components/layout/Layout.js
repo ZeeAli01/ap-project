@@ -3,12 +3,13 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import { useRouter } from 'next/router';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
   
-  // Close sidebar on route change on mobile
   useEffect(() => {
     const handleRouteChange = () => {
       if (window.innerWidth < 768) {
@@ -23,26 +24,34 @@ export default function Layout({ children }) {
     };
   }, [router.events]);
   
-  // Check if the current route is auth-related (login/signup)
   const isAuthPage = router.pathname === '/login' || router.pathname === '/signup';
+  
+  const isHomePage = router.pathname === '/';
+  
+  const hasSidebar = isAuthenticated && !isAuthPage && !isHomePage;
+  
+  const showFooter = isHomePage || isAuthPage;
   
   return (
     <div className="min-h-screen flex flex-col">
-      <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      <Header 
+        toggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+        isLoggedIn={isAuthenticated}
+      />
       
       <div className="flex flex-1">
-        {!isAuthPage && (
+        {hasSidebar && (
           <Sidebar isOpen={sidebarOpen} closeSidebar={() => setSidebarOpen(false)} />
         )}
         
-        <main className={`flex-1 transition-all duration-300 ${!isAuthPage ? 'md:ml-64' : ''}`}>
+        <main className={`flex-1 transition-all duration-300 ${hasSidebar ? 'md:ml-64' : ''}`}>
           <div className="container mx-auto px-4 py-8">
             {children}
           </div>
         </main>
       </div>
       
-      <Footer />
+      {showFooter && <Footer />}
     </div>
   );
 }

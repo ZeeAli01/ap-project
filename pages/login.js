@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -12,8 +13,9 @@ export default function Login() {
   const [error, setError] = useState('');
   
   const router = useRouter();
+  const { login } = useAuth();
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Basic validation
@@ -25,11 +27,20 @@ export default function Login() {
     setError('');
     setIsLoading(true);
     
-    // Simulate API call - in a real app, this would call your backend
-    setTimeout(() => {
+    try {
+      // Use the login function from auth context
+      const result = await login(email, password);
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      // Login successful - no need to redirect as it's handled in the context
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.');
+    } finally {
       setIsLoading(false);
-      router.push('/dashboard');
-    }, 1500);
+    }
   };
   
   return (
@@ -132,7 +143,7 @@ export default function Login() {
             
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link href="/signup" className="text-primary hover:underline">
                   Sign up
                 </Link>

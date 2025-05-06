@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 
 const prisma = new PrismaClient();
 
@@ -44,18 +44,20 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const token = jwt.sign(
-            {
-                userId: user.user_id,
-                email: user.email,
-                username: user.username,
-                role: user.userrole?.role_name || 'user',
-                roleId: user.role_id || null
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
-
+        // Create a new JWT using jose
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+        
+        const token = await new jose.SignJWT({
+            userId: user.user_id,
+            email: user.email,
+            username: user.username,
+            role: user.userrole?.role_name || 'user',
+            roleId: user.role_id || null
+        })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('24h')
+        .sign(secret);
 
         const { password_hash, ...userWithoutPassword } = user;
 

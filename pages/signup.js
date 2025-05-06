@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { Eye, EyeOff, Check, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -14,6 +15,7 @@ export default function Signup() {
   const [error, setError] = useState('');
   
   const router = useRouter();
+  const { signup } = useAuth();
   
   // Password strength indicators
   const hasMinLength = password.length >= 8;
@@ -29,7 +31,7 @@ export default function Signup() {
     hasNumbers && 
     hasSpecialChar;
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Basic validation
@@ -51,11 +53,20 @@ export default function Signup() {
     setError('');
     setIsLoading(true);
     
-    // Simulate API call - in a real app, this would call your backend
-    setTimeout(() => {
+    try {
+      // Use the signup function from auth context
+      const result = await signup(name, email, password);
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      // Signup successful - no need to redirect as it's handled in the context
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
       setIsLoading(false);
-      router.push('/dashboard');
-    }, 1500);
+    }
   };
   
   return (
@@ -147,28 +158,27 @@ export default function Signup() {
                   <div className="mt-2 space-y-2">
                     <div className="text-sm font-medium">Password strength:</div>
                     <ul className="space-y-1 text-sm">
-  <li className={`flex items-center ${hasMinLength ? 'text-success' : 'text-muted-foreground'}`}>
-    {hasMinLength ? <Check size={16} className="mr-1" /> : <span className="w-4 mr-1">•</span>}
-    At least 8 characters
-  </li>
-  <li className={`flex items-center ${hasUpperCase ? 'text-success' : 'text-muted-foreground'}`}>
-    {hasUpperCase ? <Check size={16} className="mr-1" /> : <span className="w-4 mr-1">•</span>}
-    At least one uppercase letter
-  </li>
-  <li className={`flex items-center ${hasLowerCase ? 'text-success' : 'text-muted-foreground'}`}>
-    {hasLowerCase ? <Check size={16} className="mr-1" /> : <span className="w-4 mr-1">•</span>}
-    At least one lowercase letter
-  </li>
-  <li className={`flex items-center ${hasNumbers ? 'text-success' : 'text-muted-foreground'}`}>
-    {hasNumbers ? <Check size={16} className="mr-1" /> : <span className="w-4 mr-1">•</span>}
-    At least one number
-  </li>
-  <li className={`flex items-center ${hasSpecialChar ? 'text-success' : 'text-muted-foreground'}`}>
-    {hasSpecialChar ? <Check size={16} className="mr-1" /> : <span className="w-4 mr-1">•</span>}
-    At least one special character
-  </li>
-</ul>
-
+                      <li className={`flex items-center ${hasMinLength ? 'text-success' : 'text-muted-foreground'}`}>
+                        {hasMinLength ? <Check size={16} className="mr-1" /> : <span className="w-4 mr-1">•</span>}
+                        At least 8 characters
+                      </li>
+                      <li className={`flex items-center ${hasUpperCase ? 'text-success' : 'text-muted-foreground'}`}>
+                        {hasUpperCase ? <Check size={16} className="mr-1" /> : <span className="w-4 mr-1">•</span>}
+                        At least one uppercase letter
+                      </li>
+                      <li className={`flex items-center ${hasLowerCase ? 'text-success' : 'text-muted-foreground'}`}>
+                        {hasLowerCase ? <Check size={16} className="mr-1" /> : <span className="w-4 mr-1">•</span>}
+                        At least one lowercase letter
+                      </li>
+                      <li className={`flex items-center ${hasNumbers ? 'text-success' : 'text-muted-foreground'}`}>
+                        {hasNumbers ? <Check size={16} className="mr-1" /> : <span className="w-4 mr-1">•</span>}
+                        At least one number
+                      </li>
+                      <li className={`flex items-center ${hasSpecialChar ? 'text-success' : 'text-muted-foreground'}`}>
+                        {hasSpecialChar ? <Check size={16} className="mr-1" /> : <span className="w-4 mr-1">•</span>}
+                        At least one special character
+                      </li>
+                    </ul>
                   </div>
                 )}
               </div>
