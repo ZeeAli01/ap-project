@@ -21,7 +21,6 @@ export default async function handler(req, res) {
 
         const preGeneratedUrls = [];
 
-        // Create multiple pre-generated URLs
         for (let i = 0; i < count; i++) {
             const shortUrl = nanoid(8);
 
@@ -36,7 +35,6 @@ export default async function handler(req, res) {
 
             preGeneratedUrls.push(newUrl);
 
-            // Add audit log entry
             await prisma.auditlog.create({
                 data: {
                     url_id: newUrl.url_id,

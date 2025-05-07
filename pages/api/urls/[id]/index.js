@@ -12,7 +12,6 @@ export default async function handler(req, res) {
 
     switch (method) {
         case 'GET':
-            // Get URL by ID
             try {
                 const url = await prisma.url.findUnique({
                     where: {
@@ -33,11 +32,9 @@ export default async function handler(req, res) {
 
         case 'PUT':
         case 'PATCH':
-            // Update URL by ID
             try {
                 const { userId, originalUrl, tagId, logoId, urlType, expirationDate, status } = req.body;
 
-                // Check if URL exists
                 const existingUrl = await prisma.url.findUnique({
                     where: {
                         url_id: id,
@@ -49,7 +46,6 @@ export default async function handler(req, res) {
                     return res.status(404).json({ error: 'URL not found' });
                 }
 
-                // Update URL
                 const updatedUrl = await prisma.url.update({
                     where: {
                         url_id: id,
@@ -65,7 +61,6 @@ export default async function handler(req, res) {
                     },
                 });
 
-                // Add audit log entry if userId is provided
                 if (userId) {
                     await prisma.auditlog.create({
                         data: {
@@ -84,11 +79,9 @@ export default async function handler(req, res) {
             }
 
         case 'DELETE':
-            // Delete URL by ID (soft delete)
             try {
                 const { userId } = req.body;
 
-                // Check if URL exists
                 const existingUrl = await prisma.url.findUnique({
                     where: {
                         url_id: id,
@@ -100,7 +93,6 @@ export default async function handler(req, res) {
                     return res.status(404).json({ error: 'URL not found' });
                 }
 
-                // Soft delete URL
                 const deletedUrl = await prisma.url.update({
                     where: {
                         url_id: id,
@@ -112,7 +104,6 @@ export default async function handler(req, res) {
                     },
                 });
 
-                // Add audit log entry if userId is provided
                 if (userId) {
                     await prisma.auditlog.create({
                         data: {

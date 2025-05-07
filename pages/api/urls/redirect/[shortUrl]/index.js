@@ -30,7 +30,6 @@ export default async function handler(req, res) {
             return res.status(410).json({ error: 'URL has expired' });
         }
 
-        // Record the click
         try {
             const userAgent = req.headers['user-agent'] || '';
             const ipAddress = req.headers['x-forwarded-for'] ||
@@ -38,7 +37,6 @@ export default async function handler(req, res) {
                 '0.0.0.0';
             const referrer = req.headers.referer || null;
 
-            // Simple approach for country/city - in production, you'd use a geolocation service
             const country = null;
             const city = null;
 
@@ -57,11 +55,9 @@ export default async function handler(req, res) {
                 },
             });
         } catch (clickError) {
-            // Log error but continue with redirect
             console.error('Error recording click:', clickError);
         }
 
-        // Redirect to the original URL
         return res.redirect(301, url.original_url);
     } catch (error) {
         console.error('Error redirecting URL:', error);

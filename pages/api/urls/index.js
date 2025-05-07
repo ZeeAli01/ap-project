@@ -8,7 +8,6 @@ export default async function handler(req, res) {
 
     switch (method) {
         case 'GET':
-            // Get all URLs of a user
             try {
                 const { userId } = req.query;
 
@@ -33,7 +32,6 @@ export default async function handler(req, res) {
             }
 
         case 'POST':
-            // Create a new URL
             try {
                 const { userId, originalUrl, tagId, logoId, urlType, expirationDate } = req.body;
 
@@ -41,7 +39,6 @@ export default async function handler(req, res) {
                     return res.status(400).json({ error: 'Original URL is required' });
                 }
 
-                // Generate a unique short URL of 8 characters
                 const shortUrl = nanoid(8);
 
                 const newUrl = await prisma.url.create({
@@ -56,7 +53,6 @@ export default async function handler(req, res) {
                     },
                 });
 
-                // Add an audit log entry
                 if (userId) {
                     await prisma.auditlog.create({
                         data: {

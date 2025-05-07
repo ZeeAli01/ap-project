@@ -6,7 +6,7 @@ const protectedPaths = [
     // '/admin',
     // '/api/protected',
     // '/api/admin',
-    '/api/users'
+    // '/api/users'
 ];
 
 const roleProtectedPaths = {
@@ -108,6 +108,6 @@ export const config = {
         '/dashboard/:path*',
         '/admin/:path*',
         // Protected API routes
-        '/api/users/:path*',
+        // '/api/users/:path*',
     ],
 };

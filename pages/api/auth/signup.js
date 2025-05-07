@@ -67,7 +67,6 @@ export default async function handler(req, res) {
             }
         });
 
-        // Create a new JWT using jose
         const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
         const token = await new jose.SignJWT({
@@ -102,7 +101,6 @@ export default async function handler(req, res) {
 
         return res.status(500).json({
             error: 'Registration failed',
-            // details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
         await prisma.$disconnect();
