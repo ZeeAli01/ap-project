@@ -105,13 +105,7 @@ export default function Header({ toggleSidebar, isLoggedIn }) {
               >
                 Dashboard
               </Link>
-              <Link 
-                href="/profile" 
-                className="flex items-center w-full px-4 py-2 text-sm hover:bg-muted transition-colors"
-                onClick={() => setUserDropdownOpen(false)}
-              >
-                Profile
-              </Link>
+            
               <button
                 onClick={() => {
                   handleLogout();

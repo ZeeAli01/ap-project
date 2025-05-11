@@ -10,20 +10,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get the authorization header
+    // Check for Authorization header
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Missing or invalid authorization header' });
+      return res.status(401).json({ error: 'Authorization header missing or invalid format' });
     }
-    
-    const token = authHeader.substring(7);
-    
-    // Verify the token
+
+    const token = authHeader.split(' ')[1];
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jose.jwtVerify(token, secret);
     
-    // Get the user from the database
+    let payload;
+    try {
+      const verified = await jose.jwtVerify(token, secret);
+      payload = verified.payload;
+    } catch (error) {
+      return res.status(401).json({ 
+        error: error.name === 'JWTExpired' ? 'Token expired' : 'Invalid token'
+      });
+    }
+
+    // Get fresh user data from the database
     const user = await prisma.users.findUnique({
       where: {
         user_id: payload.userId,
@@ -38,24 +45,19 @@ export default async function handler(req, res) {
         }
       }
     });
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
-    // Return the user object without the password
+
+    // Don't return password hash
     const { password_hash, ...userWithoutPassword } = user;
-    
+
     return res.status(200).json(userWithoutPassword);
   } catch (error) {
-    console.error('Get user error:', error);
-    
-    if (error.name === 'JWTExpired') {
-      return res.status(401).json({ error: 'Token expired' });
-    }
-    
-    return res.status(401).json({ error: 'Invalid token' });
+    console.error('Auth verification error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   } finally {
     await prisma.$disconnect();
   }
-} 
+}

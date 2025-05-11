@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import * as jose from 'jose';
+import { serialize } from 'cookie';
 
 const prisma = new PrismaClient();
 
@@ -45,18 +46,29 @@ export default async function handler(req, res) {
         }
 
         const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
+        
         const token = await new jose.SignJWT({
             userId: user.user_id,
             email: user.email,
             username: user.username,
-            role: user.userrole?.role_name || 'user',
+            role: user.userrole?.role_name || 'User',
             roleId: user.role_id || null
         })
             .setProtectedHeader({ alg: 'HS256' })
             .setIssuedAt()
             .setExpirationTime('24h')
             .sign(secret);
+
+        // Set HTTP-only cookie
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60, // 24 hours in seconds
+            path: '/',
+        };
+        
+        res.setHeader('Set-Cookie', serialize('auth_token', token, cookieOptions));
 
         const { password_hash, ...userWithoutPassword } = user;
 
