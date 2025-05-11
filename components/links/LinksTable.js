@@ -5,7 +5,6 @@ import LinkCard from './LinkCard';
 export default function LinksTable({ links, onEdit, onDelete }) {
   const [viewMode, setViewMode] = useState('table');
   const [showDropdown, setShowDropdown] = useState(null);
-  
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -15,13 +14,8 @@ export default function LinksTable({ links, onEdit, onDelete }) {
       }
     };
     
-    // Set initial view mode
     handleResize();
-    
-    // Add event listener
     window.addEventListener('resize', handleResize);
-    
-    // Cleanup
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
@@ -48,6 +42,7 @@ export default function LinksTable({ links, onEdit, onDelete }) {
   };
   
   const truncateUrl = (url, maxLength = 40) => {
+    if (!url) return 'unassigned';
     if (url.length <= maxLength) return url;
     return url.substring(0, maxLength) + '...';
   };
@@ -73,15 +68,13 @@ export default function LinksTable({ links, onEdit, onDelete }) {
       </span>
     );
   };
-  
-  // Tag Component
+
   const Tag = ({ text }) => (
     <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-secondary text-foreground">
       {text}
     </span>
   );
   
-  // Action Buttons for desktop
   const ActionButtons = ({ link }) => (
     <div className="flex justify-end items-center space-x-1">
       <button

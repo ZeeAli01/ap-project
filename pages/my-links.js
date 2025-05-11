@@ -1,92 +1,122 @@
 import Head from 'next/head';
-import { useState } from 'react';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import LinksTable from '@/components/links/LinksTable';
 import EditLinkModal from '@/components/links/EditLinkModal';
 import { useAuth } from '@/context/AuthContext';
 
 export default function MyLinksPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentLink, setCurrentLink] = useState(null);
+  const [links, setLinks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [tags, setTags] = useState({});
   
-  // Dummy data for links
-  const [links, setLinks] = useState([
-    {
-      id: 1,
-      originalUrl: 'https://www.ziprecruiter.com/partner/documentation/#candidate-delivery',
-      shortUrl: 'https://shortly.url/job421',
-      status: 'Active',
-      type: 'Product',
-      tag: 'web',
-      createdAt: '2023-08-15T14:30:00Z',
-      expiresAt: '2024-08-15T14:30:00Z',
-      logo: null,
-      clicks: 126
-    },
-    {
-      id: 2,
-      originalUrl: 'https://github.com/features/copilot',
-      shortUrl: 'https://shortly.url/ai123',
-      status: 'Active',
-      type: 'Development',
-      tag: 'tools',
-      createdAt: '2023-09-10T09:15:00Z',
-      expiresAt: '2024-09-10T09:15:00Z',
-      logo: null,
-      clicks: 342
-    },
-    {
-      id: 3,
-      originalUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript',
-      shortUrl: 'https://shortly.url/jsdev',
-      status: 'Inactive',
-      type: 'Education',
-      tag: 'docs',
-      createdAt: '2023-07-22T11:45:00Z',
-      expiresAt: '2024-01-22T11:45:00Z',
-      logo: null,
-      clicks: 89
-    },
-    {
-      id: 4,
-      originalUrl: 'https://tailwindcss.com/docs/installation',
-      shortUrl: 'https://shortly.url/twcss',
-      status: 'Active',
-      type: 'Development',
-      tag: 'css',
-      createdAt: '2023-10-05T16:20:00Z',
-      expiresAt: '2024-10-05T16:20:00Z',
-      logo: null,
-      clicks: 211
-    },
-    {
-      id: 5,
-      originalUrl: 'https://nextjs.org/docs/app/building-your-application/routing',
-      shortUrl: 'https://shortly.url/nxtrg',
-      status: 'Active',
-      type: 'Documentation',
-      tag: 'framework',
-      createdAt: '2023-11-12T13:10:00Z',
-      expiresAt: '2024-11-12T13:10:00Z',
-      logo: null,
-      clicks: 175
-    }
-  ]);
+  useEffect(() => {
+    const fetchTags = async () => {
+      if (!user?.user_id) return {};
+      
+      try {
+        const response = await fetch(`/api/urltags?userId=${user.user_id}`);
+        if (!response.ok) throw new Error('Failed to fetch tags');
+        
+        const tagsData = await response.json();
+        const tagsMap = {};
+        tagsData.forEach(tag => {
+          tagsMap[tag.tag_id] = tag.tag_name;
+        });
+        
+        setTags(tagsMap);
+        return tagsMap;
+      } catch (error) {
+        console.error('Error fetching tags:', error);
+        return {};
+      }
+    };
+    
+    const fetchLinks = async (tagsMap) => {
+      if (!user || !user.user_id) {
+        setLinks([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/urls?userId=${user.user_id}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch links: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const formattedLinks = data.map(link => ({
+          id: link.url_id,
+          originalUrl: link.original_url,
+          shortUrl: `${window.location.origin}/${link.short_url}`,
+          status: link.is_deleted ? 'Inactive' : link.status || 'Active',
+          type: link.url_type || 'Personal',
+          tagId: link.tag_id,
+          tag: link.tag_id ? (tagsMap[link.tag_id] || 'Unknown Tag') : 'No Tag',
+          createdAt: link.created_at,
+          expiresAt: link.expiration_date,
+          clicks: link.click_count || 0
+        }));
+        
+        setLinks(formattedLinks);
+      } catch (error) {
+        console.error('Error fetching links:', error);
+        setLinks([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    const loadData = async () => {
+      setIsLoading(true);
+      const tagsMap = await fetchTags();
+      await fetchLinks(tagsMap);
+    };
+    
+    loadData();
+  }, [user]);
   
   const handleEdit = (link) => {
     setCurrentLink(link);
     setShowEditModal(true);
   };
   
-  const handleDelete = (id) => {
-    // In a real app, this would call your API
+  const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this link?')) {
-      setLinks(links.filter(link => link.id !== id));
+      try {
+        if (user && user.user_id) {
+          const response = await fetch(`/api/urls/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: user.user_id }),
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to delete URL');
+          }
+        }
+        setLinks(links.filter(link => link.id !== id));
+      } catch (error) {
+        console.error('Error deleting URL:', error);
+        alert('Failed to delete link. Please try again.');
+      }
     }
   };
   
   const handleEditSave = (editedLink) => {
-    // In a real app, this would call your API
+    if (editedLink.tagId && tags[editedLink.tagId]) {
+      editedLink.tag = tags[editedLink.tagId];
+    } else if (!editedLink.tagId) {
+      editedLink.tag = 'No Tag';
+    }
+    
     setLinks(links.map(link => link.id === editedLink.id ? editedLink : link));
     setShowEditModal(false);
   };
@@ -110,11 +140,27 @@ export default function MyLinksPage() {
           <p className="text-muted-foreground">View and manage all your shortened URLs</p>
         </div>
         
-        <LinksTable 
-          links={links} 
-          onEdit={handleEdit} 
-          onDelete={handleDelete} 
-        />
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : links.length > 0 ? (
+          <LinksTable 
+            links={links} 
+            onEdit={handleEdit} 
+            onDelete={handleDelete} 
+          />
+        ) : (
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <p className="text-muted-foreground mb-4">You don&apos;t have any shortened URLs yet.</p>
+            <Link 
+              href="/dashboard" 
+              className="btn-primary"
+            >
+              Create your first short URL
+            </Link>
+          </div>
+        )}
       </section>
       
       {showEditModal && (
@@ -126,4 +172,20 @@ export default function MyLinksPage() {
       )}
     </>
   );
-} 
+}
+// export async function getStaticProps() {
+    
+//     const data = await fetch(`/api/urls?userId=${user.user_id}`)
+//     const links = await data.json()
+//     if(!links) {
+//         return {
+//             notFound: true,
+//         }
+//     }
+//     return {
+//       props: {
+//         links: links,
+//         revalidate: 3600,
+//       },
+//     };
+// }

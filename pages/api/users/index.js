@@ -5,8 +5,6 @@ const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
 
-    // const user = JSON.parse(req.headers.get('x-user'));
-    // console.log("user is ", user);
     try {
         if (req.method === 'GET') {
             const users = await prisma.users.findMany({
@@ -73,7 +71,6 @@ export default async function handler(req, res) {
         console.error('API Error:', error);
         return res.status(500).json({
             error: 'Server error processing request',
-            message: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
         await prisma.$disconnect();

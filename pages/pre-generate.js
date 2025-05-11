@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import PreGenerateForm from '@/components/pre-generate/PreGenerateForm';
 import PreGenerateTable from '@/components/pre-generate/PreGenerateTable';
@@ -12,39 +12,99 @@ export default function PreGeneratePage() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(null);
   
+  // Fetch pre-generated URLs on component mount
+  useEffect(() => {
+    if (user?.user_id) {
+      fetchPreGeneratedUrls();
+    }
+  }, [user]);
+  
+  // Fetch existing pre-generated URLs
+  const fetchPreGeneratedUrls = async () => {
+    try {
+      const response = await fetch(`/api/urls?userId=${user.user_id}&isPreGenerated=true`);
+      if (response.ok) {
+        const data = await response.json();
+        const formattedUrls = data.map(url => ({
+          id: url.url_id,
+          shortUrl: `${window.location.origin}/${url.short_url}`,
+          shortCode: url.short_url,
+          createdAt: url.created_at,
+          originalUrl: url.original_url,
+          assigned: !!url.original_url,
+          userId: url.user_id
+        }));
+        setGeneratedUrls(formattedUrls);
+      }
+    } catch (error) {
+      console.error('Error fetching pre-generated URLs:', error);
+    }
+  };
+  
   // Handle generating new URLs
   const handleGenerate = async (count) => {
     setIsLoading(true);
     
     try {
-      // In a real app, this would call your API
-      // Simulated API response
-      const newUrls = Array.from({ length: count }, (_, index) => {
-        const randomId = Math.random().toString(36).substring(2, 8);
-        return {
-          id: Date.now() + index,
-          shortUrl: `https://shortly.url/${randomId}`,
-          shortCode: randomId,
-          createdAt: new Date().toISOString(),
-          originalUrl: null,
-          assigned: false,
-          userId: user?.userId || 'user123'
-        };
+      // Call the pregenerate API
+      const response = await fetch('/api/urls/pregenerate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.user_id,
+          count: count
+        }),
       });
       
-      setGeneratedUrls([...generatedUrls, ...newUrls]);
+      if (!response.ok) {
+        throw new Error('Failed to generate URLs');
+      }
+      
+      const data = await response.json();
+      
+      // Transform the API response to match our frontend data structure
+      const newUrls = data.urls.map(url => ({
+        id: url.url_id,
+        shortUrl: `${window.location.origin}/${url.short_url}`,
+        shortCode: url.short_url,
+        createdAt: url.created_at,
+        originalUrl: url.original_url,
+        assigned: !!url.original_url,
+        userId: url.user_id
+      }));
+      
+      setGeneratedUrls([...newUrls, ...generatedUrls]);
     } catch (error) {
       console.error('Error generating URLs:', error);
-      // Handle error state
+      alert('Failed to generate URLs. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
   
   // Handle deleting a URL
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this URL?')) {
-      setGeneratedUrls(generatedUrls.filter(url => url.id !== id));
+      try {
+        const response = await fetch(`/api/urls/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId: user.user_id }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete URL');
+        }
+        
+        setGeneratedUrls(generatedUrls.filter(url => url.id !== id));
+      } catch (error) {
+        console.error('Error deleting URL:', error);
+        alert('Failed to delete URL. Please try again.');
+      }
     }
   };
   
@@ -55,19 +115,43 @@ export default function PreGeneratePage() {
   };
   
   // Handle assigning a URL
-  const handleAssign = (id, originalUrl) => {
-    // Update the URL with the original URL
-    setGeneratedUrls(generatedUrls.map(url => 
-      url.id === id 
-        ? { ...url, originalUrl, assigned: true }
-        : url
-    ));
-    
-    setShowAssignModal(false);
-    setCurrentUrl(null);
-    
-    // In a real app, this would also update the assigned URL in your database
-    // and potentially add it to the user's links collection
+  const handleAssign = async (id, originalUrl) => {
+    try {
+      // Update the URL with the original URL
+      const response = await fetch(`/api/urls/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          userId: user.user_id,
+          originalUrl: originalUrl
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to assign URL');
+      }
+      
+      const updatedUrl = await response.json();
+      
+      // Update the local state
+      setGeneratedUrls(generatedUrls.map(url => 
+        url.id === id 
+          ? { 
+              ...url, 
+              originalUrl: updatedUrl.original_url, 
+              assigned: !!updatedUrl.original_url 
+            }
+          : url
+      ));
+      
+      setShowAssignModal(false);
+      setCurrentUrl(null);
+    } catch (error) {
+      console.error('Error assigning URL:', error);
+      alert('Failed to assign URL. Please try again.');
+    }
   };
   
   return (
@@ -86,13 +170,23 @@ export default function PreGeneratePage() {
         
         <PreGenerateForm onGenerate={handleGenerate} isLoading={isLoading} />
         
-        {generatedUrls.length > 0 && (
+        {generatedUrls.length > 0 ? (
           <div className="mt-8">
             <PreGenerateTable 
               urls={generatedUrls} 
               onDelete={handleDelete} 
               onAssign={handleAssignModal} 
             />
+          </div>
+        ) : !isLoading && (
+          <div className="bg-card border border-border rounded-lg p-8 text-center mt-8">
+            <p className="text-muted-foreground mb-4">You don&apos;t have any pre-generated URLs yet.</p>
+            <button 
+              onClick={() => handleGenerate(5)}
+              className="btn-primary"
+            >
+              Generate your first URLs
+            </button>
           </div>
         )}
       </section>

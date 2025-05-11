@@ -1,64 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Upload, Image } from 'lucide-react';
+import { X, Link as LinkIcon, Calendar, Image } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
-// Define valid enum values based on Prisma schema
-const URL_TYPES = {
-  PRODUCT: 'product',
-  STORE: 'store',
-  MISC: 'misc'
-};
-
-const STATUS_TYPES = {
-  ACTIVE: 'active',
-  INACTIVE: 'inactive'
-};
-
-export default function EditLinkModal({ link, onSave, onClose }) {
+export default function ShortenUrlModal({ onSave, onClose }) {
   const { user } = useAuth();
-  
-  // Ensure the type is one of the valid enum values
-  const getValidUrlType = (type) => {
-    if (!type) return URL_TYPES.PRODUCT;
-    
-    // Convert to lowercase for case-insensitive comparison
-    const lowerType = type.toLowerCase();
-    
-    // Check if it's one of our valid enum values
-    if (Object.values(URL_TYPES).includes(lowerType)) {
-      return lowerType;
-    }
-    
-    // Default to 'product' if not valid
-    return URL_TYPES.PRODUCT;
-  };
-  
   const [formData, setFormData] = useState({
-    id: link.id,
-    originalUrl: link.originalUrl || '',
-    expiresAt: formatDateForInput(link.expiresAt),
-    status: link.status?.toLowerCase() === STATUS_TYPES.INACTIVE ? STATUS_TYPES.INACTIVE : STATUS_TYPES.ACTIVE,
-    type: getValidUrlType(link.type),
-    tagId: link.tagId || '',
-    logoId: link.logoId || ''
+    originalUrl: '',
+    urlType: 'product',
+    tagId: '',
+    logoId: '',
+    expirationDate: ''
   });
-  
   const [tags, setTags] = useState([]);
   const [logos, setLogos] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTags, setIsLoadingTags] = useState(false);
   const [isLoadingLogos, setIsLoadingLogos] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const modalRef = useRef(null);
+  const inputRef = useRef(null);
   
-  // Function to format date for the input field
-  function formatDateForInput(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
-  }
-  
-  // Fetch tags and logos when component mounts
   useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+    
     if (user?.user_id) {
       fetchTags();
       fetchLogos();
@@ -115,70 +81,36 @@ export default function EditLinkModal({ link, onSave, onClose }) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [onClose]);
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
-    });
+    }));
   };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsLoading(true);
     
     try {
-      // Ensure we're using a valid enum value for urlType
-      const urlType = getValidUrlType(formData.type);
-      
-      // Prepare data for API
-      const updateData = {
-        userId: user.user_id,
+      const urlData = {
+        userId: user?.user_id,
         originalUrl: formData.originalUrl,
+        urlType: formData.urlType,
         tagId: formData.tagId ? parseInt(formData.tagId) : null,
         logoId: formData.logoId ? parseInt(formData.logoId) : null,
-        urlType: urlType, // Use validated enum value
-        status: formData.status,
-        expirationDate: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : null
+        expirationDate: formData.expirationDate || null
       };
-      
-      console.log('Updating URL with data:', updateData);
-      
-      // Call the API to update the link
-      const response = await fetch(`/api/urls/${link.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update URL');
-      }
-      
-      const updatedUrl = await response.json();
-      
-      // Format the response for the UI
-      const formattedLink = {
-        ...link,
-        originalUrl: updatedUrl.original_url,
-        tagId: updatedUrl.tag_id,
-        logoId: updatedUrl.logo_id,
-        type: updatedUrl.url_type || urlType,
-        status: updatedUrl.status || formData.status,
-        expiresAt: updatedUrl.expiration_date
-      };
-      
-      // Call the onSave callback with the updated link
-      onSave(formattedLink);
+
+      console.log(urlData);
+
+      await onSave(urlData);
     } catch (error) {
-      console.error('Error updating URL:', error);
-      alert(error.message || 'Failed to update URL');
+      console.error('Error creating URL:', error);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
   
@@ -186,10 +118,10 @@ export default function EditLinkModal({ link, onSave, onClose }) {
     <div className="fixed inset-0 bg-foreground/20 backdrop-blur-sm flex justify-center items-center z-50 p-4">
       <div 
         ref={modalRef}
-        className="bg-card rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="bg-card rounded-lg shadow-lg w-full max-w-md animate-in fade-in-50 zoom-in-95"
       >
         <div className="flex justify-between items-center p-6 border-b border-border">
-          <h2 className="text-xl font-bold">Edit Link</h2>
+          <h2 className="text-xl font-bold">Shorten URL</h2>
           <button 
             onClick={onClose}
             className="p-2 rounded-full hover:bg-muted transition-colors"
@@ -202,65 +134,40 @@ export default function EditLinkModal({ link, onSave, onClose }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label htmlFor="originalUrl" className="block text-sm font-medium text-foreground mb-1">
-              Original URL
+              Original URL*
             </label>
-            <input
-              type="url"
-              id="originalUrl"
-              name="originalUrl"
-              value={formData.originalUrl}
-              onChange={handleChange}
-              className="input-field"
-              required
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <LinkIcon size={16} className="text-muted-foreground" />
+              </div>
+              <input
+                ref={inputRef}
+                type="url"
+                id="originalUrl"
+                name="originalUrl"
+                value={formData.originalUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/your-page"
+                className="input-field pl-10"
+                required
+              />
+            </div>
           </div>
           
           <div>
-            <label htmlFor="expiresAt" className="block text-sm font-medium text-foreground mb-1">
-              Expiration Date
-            </label>
-            <input
-              type="date"
-              id="expiresAt"
-              name="expiresAt"
-              value={formData.expiresAt}
-              onChange={handleChange}
-              className="input-field"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium text-foreground mb-1">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="input-field"
-              required
-            >
-              <option value={STATUS_TYPES.ACTIVE}>Active</option>
-              <option value={STATUS_TYPES.INACTIVE}>Inactive</option>
-            </select>
-          </div>
-          
-          <div>
-            <label htmlFor="type" className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="urlType" className="block text-sm font-medium text-foreground mb-1">
               Type
             </label>
             <select
-              id="type"
-              name="type"
-              value={formData.type}
+              id="urlType"
+              name="urlType"
+              value={formData.urlType}
               onChange={handleChange}
               className="input-field"
-              required
             >
-              <option value={URL_TYPES.PRODUCT}>Product</option>
-              <option value={URL_TYPES.STORE}>Store</option>
-              <option value={URL_TYPES.MISC}>Miscellaneous</option>
+              <option value="product">Product</option>
+              <option value="store">Store</option>
+              <option value="misc">Miscellaneous</option>
             </select>
           </div>
           
@@ -364,21 +271,41 @@ export default function EditLinkModal({ link, onSave, onClose }) {
             )}
           </div>
           
-          <div className="pt-4 flex justify-end space-x-2 border-t border-border">
+          <div>
+            <label htmlFor="expirationDate" className="block text-sm font-medium text-foreground mb-1">
+              Expiration Date (Optional)
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Calendar size={16} className="text-muted-foreground" />
+              </div>
+              <input
+                type="date"
+                id="expirationDate"
+                name="expirationDate"
+                value={formData.expirationDate}
+                onChange={handleChange}
+                className="input-field pl-10"
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
             <button
               type="button"
               onClick={onClose}
               className="btn-secondary"
-              disabled={isSubmitting}
+              disabled={isLoading}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="btn-primary"
-              disabled={isSubmitting}
+              disabled={isLoading || !formData.originalUrl}
             >
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
+              {isLoading ? 'Creating...' : 'Shorten URL'}
             </button>
           </div>
         </form>

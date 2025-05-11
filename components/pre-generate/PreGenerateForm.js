@@ -24,7 +24,7 @@ export default function PreGenerateForm({ onGenerate, isLoading }) {
             id="url-count"
             type="number"
             min="1"
-            max="50"
+            max="100"
             value={count}
             onChange={(e) => setCount(parseInt(e.target.value, 10) || 1)}
             className="input-field"

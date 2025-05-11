@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Link as LinkIcon, BarChart, Settings, Users, Menu, ChevronLeft, ChevronRight, ClipboardList, Plus } from 'lucide-react';
+import { Link as LinkIcon, BarChart, Settings, Users, Menu, ChevronLeft, ChevronRight, ClipboardList, Plus, Tag, Image } from 'lucide-react';
 
 export default function Sidebar({ isOpen, closeSidebar }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -11,6 +11,8 @@ export default function Sidebar({ isOpen, closeSidebar }) {
     { name: 'Dashboard', href: '/dashboard', icon: <BarChart size={20} /> },
     { name: 'My Links', href: '/my-links', icon: <LinkIcon size={20} /> },
     { name: 'Pre-Generate', href: '/pre-generate', icon: <Plus size={20} /> },
+    { name: 'Tags', href: '/tags', icon: <Tag size={20} /> },
+    { name: 'Logos', href: '/logos', icon: <Image size={20} /> },
     { name: 'Analytics', href: '/analytics', icon: <BarChart size={20} /> },
     { name: 'Audit Log', href: '/audit-log', icon: <ClipboardList size={20} /> },
     { name: 'Settings', href: '/settings', icon: <Settings size={20} /> },

@@ -6,7 +6,7 @@ const protectedPaths = [
     // '/admin',
     // '/api/protected',
     // '/api/admin',
-    '/api/users'
+    // '/api/users'
 ];
 
 const roleProtectedPaths = {
@@ -41,19 +41,12 @@ export async function middleware(request) {
     }
 
     const token = authHeader.split(" ")[1];
-    console.log('JWT_SECRET:', process.env.JWT_SECRET);
-    console.log("token is :", token);
-
     try {
-        console.log("MIDDLEWARE TRY");
-        
-        // Create a text encoder for the secret
         const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-        
-        // Verify the token using jose
+
         const { payload } = await jose.jwtVerify(token, secret);
         console.log("decoded", payload);
-        
+
         const requiredRoles = Object.entries(roleProtectedPaths)
             .find(([path]) => pathname.startsWith(path))?.[1];
 
@@ -115,6 +108,6 @@ export const config = {
         '/dashboard/:path*',
         '/admin/:path*',
         // Protected API routes
-        '/api/users/:path*',
+        // '/api/users/:path*',
     ],
 };

@@ -3,67 +3,54 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { ArrowLeft, Download, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 export default function QRCodePage() {
   const router = useRouter();
   const { id } = router.query;
+  const { user } = useAuth();
   const [link, setLink] = useState(null);
   const [qrSize, setQrSize] = useState(200);
   const [showSettings, setShowSettings] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  // In a real app, fetch the link data from your API
   useEffect(() => {
-    if (id) {
-      // Simulating API call
-      const mockLinks = [
-        {
-          id: 1,
-          originalUrl: 'https://www.ziprecruiter.com/partner/documentation/#candidate-delivery',
-          shortUrl: 'https://shortly.url/job421',
-          status: 'Active',
-          type: 'Product',
-          tag: 'web',
-        },
-        {
-          id: 2,
-          originalUrl: 'https://github.com/features/copilot',
-          shortUrl: 'https://shortly.url/ai123',
-          status: 'Active',
-          type: 'Development',
-          tag: 'tools',
-        },
-        {
-          id: 3,
-          originalUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript',
-          shortUrl: 'https://shortly.url/jsdev',
-          status: 'Inactive',
-          type: 'Education',
-          tag: 'docs',
-        },
-        {
-          id: 4,
-          originalUrl: 'https://tailwindcss.com/docs/installation',
-          shortUrl: 'https://shortly.url/twcss',
-          status: 'Active',
-          type: 'Development',
-          tag: 'css',
-        },
-        {
-          id: 5,
-          originalUrl: 'https://nextjs.org/docs/app/building-your-application/routing',
-          shortUrl: 'https://shortly.url/nxtrg',
-          status: 'Active',
-          type: 'Documentation',
-          tag: 'framework',
-        }
-      ];
+    const fetchLink = async () => {
+      if (!id || !user?.user_id) return;
       
-      const foundLink = mockLinks.find(l => l.id.toString() === id.toString());
-      setLink(foundLink || null);
-    }
-  }, [id]);
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/urls/${id}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch URL: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        const formattedLink = {
+          id: data.url_id,
+          originalUrl: data.original_url,
+          shortUrl: `${window.location.origin}/${data.short_url}`,
+          status: data.is_deleted ? 'Inactive' : data.status || 'Active',
+          type: data.url_type || 'Product',
+          tag: data.tag_id ? `Tag ${data.tag_id}` : 'No Tag'
+        };
+        
+        setLink(formattedLink);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching URL:', err);
+        setError('Failed to load URL data. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchLink();
+  }, [id, user]);
   
-  // Generate QR code URL using a free API
   const getQRCodeUrl = () => {
     if (!link) return '';
     const encodedUrl = encodeURIComponent(link.shortUrl);
@@ -83,11 +70,25 @@ export default function QRCodePage() {
     setQrSize(parseInt(e.target.value, 10));
   };
   
-  if (!link) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading QR code...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error || !link) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-error mb-4">{error || 'URL not found'}</p>
+          <Link href="/my-links" className="btn-primary">
+            Back to My Links
+          </Link>
         </div>
       </div>
     );
@@ -119,6 +120,7 @@ export default function QRCodePage() {
                 src={getQRCodeUrl()} 
                 alt={`QR code for ${link.shortUrl}`} 
                 className="max-w-full"
+                onError={() => setError('Failed to generate QR code. Please try again.')}
               />
             </div>
             
@@ -128,45 +130,6 @@ export default function QRCodePage() {
               <p className="text-sm text-muted-foreground mt-3 mb-1">Short URL:</p>
               <p className="text-primary font-medium">{link.shortUrl}</p>
             </div>
-            
-            <div className="flex flex-wrap gap-2 justify-center mt-2">
-              <button
-                onClick={handleDownload}
-                className="btn-primary flex items-center"
-              >
-                <Download size={16} className="mr-1" />
-                Download
-              </button>
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="btn-secondary flex items-center"
-              >
-                <Settings size={16} className="mr-1" />
-                Settings
-              </button>
-            </div>
-            
-            {showSettings && (
-              <div className="mt-4 w-full max-w-xs">
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  QR Code Size
-                </label>
-                <input
-                  type="range"
-                  min="100"
-                  max="500"
-                  step="10"
-                  value={qrSize}
-                  onChange={handleSizeChange}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Small</span>
-                  <span>{qrSize}px</span>
-                  <span>Large</span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </section>
