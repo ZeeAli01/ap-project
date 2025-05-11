@@ -1,38 +1,7 @@
 import { BarChart3, Link, Zap, Shield, LineChart, PieChart } from 'lucide-react';
 
-export default function Features() {
-  const features = [
-    {
-      icon: <Link size={24} className="text-primary" />,
-      title: 'Custom Short Links',
-      description: 'Create branded links with custom domains that increase click-through rates and brand recognition.'
-    },
-    {
-      icon: <BarChart3 size={24} className="text-primary" />,
-      title: 'Detailed Analytics',
-      description: 'Access comprehensive click data including location, devices, referrers, and timing information.'
-    },
-    {
-      icon: <Zap size={24} className="text-primary" />,
-      title: 'Fast Redirects',
-      description: 'Our global CDN ensures lightning-fast redirects for an optimal user experience worldwide.'
-    },
-    {
-      icon: <Shield size={24} className="text-primary" />,
-      title: 'Secure Links',
-      description: 'All links are screened for malware and phishing attempts to protect your brand and users.'
-    },
-    {
-      icon: <LineChart size={24} className="text-primary" />,
-      title: 'Traffic Insights',
-      description: 'Gain valuable insights into your audience with detailed traffic source analysis.'
-    },
-    {
-      icon: <PieChart size={24} className="text-primary" />,
-      title: 'Engagement Tracking',
-      description: 'Track user engagement metrics to optimize your marketing campaigns effectively.'
-    }
-  ];
+export default function Features({features}) {
+
   
   return (
     <section className="py-16 bg-secondary/30 dark:bg-muted/10">

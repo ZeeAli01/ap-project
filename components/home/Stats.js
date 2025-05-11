@@ -1,10 +1,5 @@
-export default function Stats() {
-  const stats = [
-    { value: '1.2B+', label: 'Links Shortened' },
-    { value: '190+', label: 'Countries & Territories' },
-    { value: '99.9%', label: 'Uptime Reliability' },
-    { value: '15M+', label: 'Active Users' },
-  ];
+export default function Stats({stats}) {
+ 
   
   return (
     <section className="py-16">
