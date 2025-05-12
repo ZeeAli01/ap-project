@@ -80,7 +80,7 @@ export default function MyLinksPage({links,tags}) {
     
   //   loadData();
   // }, [user]);
-  
+  const mylinks = links.filter(link => link.status === 'active');
   const handleEdit = (link) => {
     setCurrentLink(link);
     setShowEditModal(true);
@@ -133,41 +133,42 @@ export default function MyLinksPage({links,tags}) {
         <meta name="description" content="Manage your shortened URLs" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      
+
       <section className="px-4 md:px-0">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">My Links</h1>
-          <p className="text-muted-foreground">View and manage all your shortened URLs</p>
+          <p className="text-muted-foreground">
+            View and manage all your shortened URLs
+          </p>
         </div>
-        
+
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : links.length > 0 ? (
-          <LinksTable 
-            links={links} 
-            onEdit={handleEdit} 
-            onDelete={handleDelete} 
+        ) : mylinks.length > 0 ? (
+          <LinksTable
+            links={mylinks}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         ) : (
           <div className="bg-card border border-border rounded-lg p-8 text-center">
-            <p className="text-muted-foreground mb-4">You don&apos;t have any shortened URLs yet.</p>
-            <Link 
-              href="/dashboard" 
-              className="btn-primary"
-            >
+            <p className="text-muted-foreground mb-4">
+              You don&apos;t have any shortened URLs yet.
+            </p>
+            <Link href="/dashboard" className="btn-primary">
               Create your first short URL
             </Link>
           </div>
         )}
       </section>
-      
+
       {showEditModal && (
-        <EditLinkModal 
-          link={currentLink} 
-          onSave={handleEditSave} 
-          onClose={handleModalClose} 
+        <EditLinkModal
+          link={currentLink}
+          onSave={handleEditSave}
+          onClose={handleModalClose}
         />
       )}
     </>

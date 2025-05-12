@@ -158,7 +158,6 @@ export default function LinksTable({ links, onEdit, onDelete }) {
         </div>
       )}
       
-      {/* Table view (Desktop) */}
       {viewMode === 'table' && (
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
