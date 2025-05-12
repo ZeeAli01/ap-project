@@ -8,7 +8,6 @@ export default function AuditLogPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   
-  // Dummy data for audit logs
   const [auditLogs, setAuditLogs] = useState([
     {
       id: 1,
@@ -103,7 +102,6 @@ export default function AuditLogPage() {
     }
   ]);
   
-  // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = auditLogs.slice(indexOfFirstItem, indexOfLastItem);

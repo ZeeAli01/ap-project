@@ -59,12 +59,11 @@ export default async function handler(req, res) {
             .setExpirationTime('24h')
             .sign(secret);
 
-        // Set HTTP-only cookie
         const cookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 24 * 60 * 60, // 24 hours in seconds
+            maxAge: 24 * 60 * 60,
             path: '/',
         };
         

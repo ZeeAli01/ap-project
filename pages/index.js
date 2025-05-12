@@ -57,7 +57,7 @@ export async function getStaticProps() {
   
   const features = [
     {
-      iconName: 'Link', // Use string names instead of JSX elements
+      iconName: 'Link', 
       title: 'Custom Short Links',
       description: 'Create branded links with custom domains that increase click-through rates and brand recognition.'
     },

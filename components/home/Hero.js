@@ -13,7 +13,6 @@ export default function Hero() {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Basic validation
     if (!url) {
       setError('Please enter a URL');
       return;
@@ -26,8 +25,6 @@ export default function Hero() {
     
     setError('');
     setIsLoading(true);
-    
-    // Simulate API call - in a real app, this would call your backend
     setTimeout(() => {
       setIsLoading(false);
       setShortenedUrl('https://shortly.url/a1b2c3');

@@ -28,7 +28,6 @@ export async function middleware(request) {
     return NextResponse.next();
   }
 
-  // Check for token in cookies first
   let token;
   const cookies = request.cookies;
   const authCookie = cookies.get('auth_token');
@@ -36,7 +35,6 @@ export async function middleware(request) {
   if (authCookie?.value) {
     token = authCookie.value;
   } else {
-    // Fall back to authorization header if cookie isn't present
     const authHeader = request.headers.get('authorization');
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -44,7 +42,6 @@ export async function middleware(request) {
     }
   }
 
-  // No token found in either cookie or header
   if (!token) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(

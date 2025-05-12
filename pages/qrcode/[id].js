@@ -57,19 +57,6 @@ export default function QRCodePage() {
     return `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodedUrl}`;
   };
   
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = getQRCodeUrl();
-    link.download = `qrcode-${id}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-  
-  const handleSizeChange = (e) => {
-    setQrSize(parseInt(e.target.value, 10));
-  };
-  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">

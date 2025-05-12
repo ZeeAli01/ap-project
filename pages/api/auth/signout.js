@@ -6,11 +6,10 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
     }
 
-    // Clear the auth cookie
     const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        expires: new Date(0), // Set expiration to the past
+        expires: new Date(0),
         sameSite: 'strict',
         path: '/',
     };

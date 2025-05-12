@@ -10,7 +10,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Check for Authorization header
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -30,7 +29,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Get fresh user data from the database
     const user = await prisma.users.findUnique({
       where: {
         user_id: payload.userId,
@@ -50,7 +48,6 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Don't return password hash
     const { password_hash, ...userWithoutPassword } = user;
 
     return res.status(200).json(userWithoutPassword);

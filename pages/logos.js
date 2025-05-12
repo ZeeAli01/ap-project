@@ -47,13 +47,13 @@ export default function LogosPage() {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Validate file type
+    // file type
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file.');
       return;
     }
     
-    // Validate file size (max 2MB)
+    // file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       setError('Image size should be less than 2MB.');
       return;
@@ -77,10 +77,8 @@ export default function LogosPage() {
         throw new Error(errorData.error || 'Failed to upload logo');
       }
       
-      // Refresh the logos list
       await fetchLogos();
       
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -106,7 +104,6 @@ export default function LogosPage() {
         throw new Error('Failed to delete logo');
       }
       
-      // Update state to remove the deleted logo
       setLogos(logos.filter(logo => logo.logo_id !== logoId));
     } catch (error) {
       console.error('Error deleting logo:', error);

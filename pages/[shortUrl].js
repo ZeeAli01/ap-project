@@ -11,7 +11,6 @@ export default function ShortUrlRedirect() {
       if (!shortUrl) return;
 
       try {
-        // Redirect to the API endpoint that handles the redirect
         window.location.href = `/api/urls/redirect/${shortUrl}`;
       } catch (error) {
         console.error('Error redirecting:', error);

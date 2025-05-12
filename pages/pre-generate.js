@@ -11,42 +11,38 @@ export default function PreGeneratePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(null);
-  
-  // Fetch pre-generated URLs on component mount
+
   useEffect(() => {
     if (user?.user_id) {
+       const fetchPreGeneratedUrls = async () => {
+         try {
+           const response = await fetch(
+             `/api/urls?userId=${user.user_id}&isPreGenerated=true`
+           );
+           if (response.ok) {
+             const data = await response.json();
+             const formattedUrls = data.map((url) => ({
+               id: url.url_id,
+               shortUrl: `${window.location.origin}/${url.short_url}`,
+               shortCode: url.short_url,
+               createdAt: url.created_at,
+               originalUrl: url.original_url,
+               assigned: !!url.original_url,
+               userId: url.user_id,
+             }));
+             setGeneratedUrls(formattedUrls);
+           }
+         } catch (error) {
+           console.error("Error fetching pre-generated URLs:", error);
+         }
+       };
       fetchPreGeneratedUrls();
     }
   }, [user]);
   
-  // Fetch existing pre-generated URLs
-  const fetchPreGeneratedUrls = async () => {
-    try {
-      const response = await fetch(`/api/urls?userId=${user.user_id}&isPreGenerated=true`);
-      if (response.ok) {
-        const data = await response.json();
-        const formattedUrls = data.map(url => ({
-          id: url.url_id,
-          shortUrl: `${window.location.origin}/${url.short_url}`,
-          shortCode: url.short_url,
-          createdAt: url.created_at,
-          originalUrl: url.original_url,
-          assigned: !!url.original_url,
-          userId: url.user_id
-        }));
-        setGeneratedUrls(formattedUrls);
-      }
-    } catch (error) {
-      console.error('Error fetching pre-generated URLs:', error);
-    }
-  };
-  
-  // Handle generating new URLs
   const handleGenerate = async (count) => {
     setIsLoading(true);
-    
     try {
-      // Call the pregenerate API
       const response = await fetch('/api/urls/pregenerate', {
         method: 'POST',
         headers: {
@@ -61,10 +57,7 @@ export default function PreGeneratePage() {
       if (!response.ok) {
         throw new Error('Failed to generate URLs');
       }
-      
       const data = await response.json();
-      
-      // Transform the API response to match our frontend data structure
       const newUrls = data.urls.map(url => ({
         id: url.url_id,
         shortUrl: `${window.location.origin}/${url.short_url}`,
@@ -74,7 +67,6 @@ export default function PreGeneratePage() {
         assigned: !!url.original_url,
         userId: url.user_id
       }));
-      
       setGeneratedUrls([...newUrls, ...generatedUrls]);
     } catch (error) {
       console.error('Error generating URLs:', error);
@@ -84,7 +76,6 @@ export default function PreGeneratePage() {
     }
   };
   
-  // Handle deleting a URL
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this URL?')) {
       try {
@@ -108,16 +99,13 @@ export default function PreGeneratePage() {
     }
   };
   
-  // Handle opening the assign modal
   const handleAssignModal = (url) => {
     setCurrentUrl(url);
     setShowAssignModal(true);
   };
   
-  // Handle assigning a URL
   const handleAssign = async (id, originalUrl) => {
     try {
-      // Update the URL with the original URL
       const response = await fetch(`/api/urls/${id}`, {
         method: 'PUT',
         headers: {
@@ -134,8 +122,6 @@ export default function PreGeneratePage() {
       }
       
       const updatedUrl = await response.json();
-      
-      // Update the local state
       setGeneratedUrls(generatedUrls.map(url => 
         url.id === id 
           ? { 

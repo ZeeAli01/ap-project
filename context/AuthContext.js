@@ -111,12 +111,10 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      // Call the logout API to clear the cookie
       await fetch('/api/auth/signout', {
         method: 'POST',
       });
       
-      // Clear localStorage
       localStorage.removeItem('auth_token');
       
       setUser(null);

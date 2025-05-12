@@ -49,7 +49,6 @@ export default function AnalyticsPage() {
     fetchData();
   }, [id, groupBy, dateRange]);
   
-  // Handle date range change
   const handleDateChange = (e) => {
     const { name, value } = e.target;
     setDateRange(prev => ({
@@ -58,17 +57,14 @@ export default function AnalyticsPage() {
     }));
   };
   
-  // Handle group by change
   const handleGroupByChange = (newGroupBy) => {
     setGroupBy(newGroupBy);
   };
   
-  // Toggle filters panel
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
   
-  // Format data for chart display
   const formatChartData = (data) => {
     if (!data || !data.data) return [];
     
@@ -88,30 +84,6 @@ export default function AnalyticsPage() {
     });
   };
   
-  // Export data as CSV
-  const exportCSV = () => {
-    if (!analytics) return;
-    
-    const headers = groupBy === 'day' ? ['Date', 'Clicks'] : [groupBy.charAt(0).toUpperCase() + groupBy.slice(1), 'Clicks'];
-    
-    const csvData = analytics.data.map(item => {
-      const key = Object.keys(item).find(k => k !== 'count');
-      return `"${item[key]}","${item.count}"`;
-    }).join('\n');
-    
-    const csv = `${headers.join(',')}\n${csvData}`;
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `url-analytics-${id}-${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-  
-  // If still loading router query
   if (!id) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -129,21 +101,6 @@ export default function AnalyticsPage() {
             <div>
               <h1 className="text-3xl font-bold">URL Analytics Dashboard</h1>
               <p className="mt-1 text-blue-100">Track performance and insights for your shortened URL</p>
-            </div>
-            <div className="flex space-x-3">
-              <button 
-                onClick={() => router.push('/dashboard')}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Back to Dashboard
-              </button>
-              <button 
-                onClick={exportCSV}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export CSV
-              </button>
             </div>
           </div>
         </div>

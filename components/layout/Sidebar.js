@@ -20,11 +20,9 @@ export default function Sidebar({ isOpen, closeSidebar }) {
   const [collapsed, setCollapsed] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
-
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: <BarChart size={20} /> },
-    { name: "My Links", href: "/my-links", icon: <LinkIcon size={20} /> },
-    { name: "Pre-Generate", href: "/pre-generate", icon: <Plus size={20} /> },
+    { name: "My Links", href: `/my-links/${user?.user_id}`, icon: <LinkIcon size={20} /> },
     { name: "Tags", href: "/tags", icon: <Tag size={20} /> },
     { name: "Logos", href: "/logos", icon: <Image size={20} /> },
     ...(user?.role_id === 1
@@ -33,6 +31,11 @@ export default function Sidebar({ isOpen, closeSidebar }) {
             name: "Analytics",
             href: "/analytics",
             icon: <BarChart size={20} />,
+          },
+          {
+            name: "Pre-Generate",
+            href: "/pre-generate",
+            icon: <Plus size={20} />,
           },
         ]
       : []),
