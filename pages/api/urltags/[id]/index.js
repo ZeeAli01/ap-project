@@ -3,13 +3,13 @@ const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
   const tagId = parseInt(req.query.id);
-  const userId = parseInt(req.query.userId);
+  const userId = req.query.userId;
 
   if (isNaN(tagId)) {
     return res.status(400).json({ error: 'Invalid tag ID' });
   }
 
-  if (isNaN(userId)) {
+  if (!userId) {
     return res.status(400).json({ error: 'Invalid user ID' });
   }
 

@@ -4,10 +4,7 @@ import { nanoid } from 'nanoid';
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
-
+    if(req.method === 'POST') {
     try {
         const { userId, count = 5 } = req.body;
 
@@ -50,4 +47,29 @@ export default async function handler(req, res) {
         console.error('Error pre-generating URLs:', error);
         return res.status(500).json({ error: 'Failed to pre-generate URLs' });
     }
+}
+else if (req.method === 'GET') {
+    try {
+        const { userId, isPreGenerated } = req.query;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        const preGeneratedUrls = await prisma.url.findMany({
+            where: {
+                user_id: userId,
+                is_pre_generated: isPreGenerated === 'true',
+            },
+        });
+
+        return res.status(200).json({ success: true, urls: preGeneratedUrls });
+    } catch (error) {
+        console.error('Error fetching pre-generated URLs:', error);
+        return res.status(500).json({ error: 'Failed to fetch pre-generated URLs' });
+    }
+}
+else {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+}
 }

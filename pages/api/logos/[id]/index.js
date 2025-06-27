@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   try {
     if (method === 'GET') {
       const logo = await prisma.logo.findUnique({
-        where: { id: parseInt(id) },
+        where: { logo_id: parseInt(id) },
       });
 
       if (!logo || logo.is_deleted) {
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
 
     if (method === 'PUT') {
       const existingLogo = await prisma.logo.findUnique({
-        where: { id: parseInt(id) },
+        where: { logo_id: parseInt(id) },
       });
 
       if (!existingLogo || existingLogo.is_deleted) {
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
       }
 
       const updatedLogo = await prisma.logo.update({
-        where: { id: parseInt(id) },
+        where: { logo_id: parseInt(id) },
         data: {
           logo_path: uploadResult.secure_url,
           updated_at: new Date(),
@@ -114,7 +114,7 @@ export default async function handler(req, res) {
 
     if (method === 'DELETE') {
       const existingLogo = await prisma.logo.findUnique({
-        where: { id: parseInt(id) },
+        where: { logo_id: parseInt(id) },
       });
 
       if (!existingLogo || existingLogo.is_deleted) {
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
       }
 
       const deletedLogo = await prisma.logo.update({
-        where: { id: parseInt(id) },
+        where: { logo_id: parseInt(id) },
         data: {
           is_deleted: true,
           updated_at: new Date(),

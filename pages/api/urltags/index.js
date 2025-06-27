@@ -4,17 +4,17 @@ const prisma = new PrismaClient();
 export default async function handler(req, res) {
   const userId = req.query.userId;
 
-  if (!userId || isNaN(parseInt(userId))) {
+  if (!userId ) {
     return res.status(400).json({ error: 'Invalid or missing userId in query parameters' });
   }
 
-  const parsedUserId = parseInt(userId);
+  // const parsedUserId = parseInt(userId);
 
   switch (req.method) {
     case 'GET':
-      return await getTags(req, res, parsedUserId);
+      return await getTags(req, res, userId);
     case 'POST':
-      return await createTag(req, res, parsedUserId);
+      return await createTag(req, res, userId);
     default:
       res.setHeader('Allow', ['GET', 'POST']);
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` });

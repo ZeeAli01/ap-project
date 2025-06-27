@@ -1,24 +1,5 @@
-export default function Testimonials() {
-  const testimonials = [
-    {
-      quote: "ShortlyURL has transformed our marketing campaigns. The analytics are comprehensive and the custom branding options are exactly what we needed.",
-      author: "Sarah Johnson",
-      title: "Marketing Director, TechCorp",
-      avatar: "https://randomuser.me/api/portraits/women/17.jpg"
-    },
-    {
-      quote: "We've increased our click-through rates by 30% since switching to ShortlyURL. The dashboard is intuitive and the insights are invaluable.",
-      author: "Mark Williams",
-      title: "Digital Strategist, GrowthFirm",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg"
-    },
-    {
-      quote: "The reliability and speed of ShortlyURL's service is unmatched. Our social media team can't imagine working without it now.",
-      author: "Jessica Chen",
-      title: "Social Media Manager, BrandX",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg"
-    }
-  ];
+export default function Testimonials({testimonials}) {
+
   
   return (
     <section className="py-16 bg-primary/5">
