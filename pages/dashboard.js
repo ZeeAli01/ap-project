@@ -55,7 +55,7 @@ export default function Dashboard() {
            };
          }));
 
-         setLinks(formattedLinks);
+         setLinks(formattedLinks.filter(f_url=>f_url.originalUrl!=null));
        } catch (error) {
          console.error("Error fetching URLs:", error);
          setLinks([]);

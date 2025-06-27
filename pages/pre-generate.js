@@ -30,7 +30,7 @@ export default function PreGeneratePage() {
                assigned: !!url.original_url,
                userId: url.user_id,
              }));
-             setGeneratedUrls(formattedUrls);
+             setGeneratedUrls(formattedUrls.filter(f_url=>f_url.originalUrl==null));
            }
          } catch (error) {
            console.error("Error fetching pre-generated URLs:", error);

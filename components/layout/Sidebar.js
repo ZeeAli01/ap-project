@@ -27,11 +27,11 @@ export default function Sidebar({ isOpen, closeSidebar }) {
     { name: "Logos", href: "/logos", icon: <Image size={20} /> },
     ...(user?.role_id === 1
       ? [
-          {
-            name: "Analytics",
-            href: "/analytics",
-            icon: <BarChart size={20} />,
-          },
+          // {
+          //   name: "Analytics",
+          //   href: "/analytics",
+          //   icon: <BarChart size={20} />,
+          // },
           {
             name: "Pre-Generate",
             href: "/pre-generate",

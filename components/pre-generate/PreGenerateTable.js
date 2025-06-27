@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link as LinkIcon, Edit, Trash2, CheckCircle } from 'lucide-react';
 
 export default function PreGenerateTable({ urls, onDelete, onAssign }) {
+  
   const [viewMode, setViewMode] = useState('table');
   
   useEffect(() => {
